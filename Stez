@@ -1,0 +1,340 @@
+-- stez Instant Steal + Remove Animation Button
+
+local Players = game:GetService("Players")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+if _G.stezHubInstantStealLoaded then 
+	warn("stez Instant Steal already loaded!")
+	return 
+end
+_G.stezHubInstantStealLoaded = true
+
+local pos1, pos2 = nil, nil
+local beam1, beam2
+local part1, part2
+
+local targetPositions = {
+	Vector3.new(-481.88, -3.79, 138.02),
+	Vector3.new(-481.75, -3.79, 89.18),
+	Vector3.new(-481.82, -3.79, 30.95),
+	Vector3.new(-481.75, -3.79, -17.79),
+	Vector3.new(-481.80, -3.79, -76.06),
+	Vector3.new(-481.72, -3.79, -124.70),
+	Vector3.new(-337.45, -3.85, -124.72),
+	Vector3.new(-337.37, -3.85, -76.07),
+	Vector3.new(-337.46, -3.79, -17.72),
+	Vector3.new(-337.41, -3.79, 30.92),
+	Vector3.new(-337.32, -3.79, 89.02),
+	Vector3.new(-337.27, -3.79, 137.90),
+	Vector3.new(-337.45, -3.79, 196.29),
+	Vector3.new(-337.37, -3.79, 244.91),
+	Vector3.new(-481.72, -3.79, 196.21),
+	Vector3.new(-481.76, -3.79, 244.92)
+}
+
+print("[STEZHUB] Creating GUI...")
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "STEZHubUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.Size = UDim2.fromOffset(220, 160)
+frame.Position = UDim2.fromScale(0.5, 0.5)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Active = true
+frame.Draggable = true
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 10)
+frameCorner.Parent = frame
+
+local frameStroke = Instance.new("UIStroke")
+frameStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+frameStroke.Color = Color3.fromRGB(80, 80, 80)
+frameStroke.Thickness = 1.5
+frameStroke.Parent = frame
+
+-- Title
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -12, 0, 28)
+title.Position = UDim2.fromOffset(6, 6)
+title.BackgroundTransparency = 1
+title.Text = "STEZHUB | INSTANT STEAL"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.TextColor3 = Color3.fromRGB(230, 230, 230)
+title.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Status
+local status = Instance.new("TextLabel", frame)
+status.Size = UDim2.new(1, -12, 0, 22)
+status.Position = UDim2.fromOffset(6, 42)
+status.BackgroundTransparency = 1
+status.Text = "Waiting for Steal…"
+status.Font = Enum.Font.Gotham
+status.TextSize = 12
+status.TextColor3 = Color3.fromRGB(190, 190, 190)
+status.TextXAlignment = Enum.TextXAlignment.Center
+
+task.spawn(function()
+	while gui.Parent do
+		TweenService:Create(status, TweenInfo.new(1.2), {TextTransparency = 0.4}):Play()
+		task.wait(1.2)
+		TweenService:Create(status, TweenInfo.new(1.2), {TextTransparency = 0}):Play()
+		task.wait(1.2)
+	end
+end)
+
+local function makeButton(text, y)
+	local b = Instance.new("TextButton", frame)
+	b.Size = UDim2.new(1, -24, 0, 36)
+	b.Position = UDim2.fromOffset(12, y)
+	b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	b.BackgroundTransparency = 0
+	b.Text = text
+	b.Font = Enum.Font.GothamMedium
+	b.TextSize = 14
+	b.TextColor3 = Color3.fromRGB(235, 235, 235)
+	b.AutoButtonColor = false
+
+	local c = Instance.new("UICorner", b)
+	c.CornerRadius = UDim.new(0, 6)
+
+	b.MouseEnter:Connect(function()
+		TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(60,60,60)}):Play()
+	end)
+
+	b.MouseLeave:Connect(function()
+		TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(45,45,45)}):Play()
+	end)
+
+	return b
+end
+
+local btn1 = makeButton("Set Position", 80)
+
+local function pressAnim(button)
+	local origSize = button.Size
+	local origPos = button.Position
+
+	TweenService:Create(button, TweenInfo.new(0.08), {
+		Size = origSize - UDim2.fromOffset(4,3),
+		Position = origPos + UDim2.fromOffset(2,1)
+	}):Play()
+
+	task.wait(0.08)
+
+	TweenService:Create(button, TweenInfo.new(0.12), {
+		Size = origSize,
+		Position = origPos
+	}):Play()
+end
+
+local function createBeam(position, color, index)
+	local char = player.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+	local part = Instance.new("Part")
+	part.Anchored = true
+	part.CanCollide = false
+	part.Transparency = 1
+	part.CFrame = CFrame.new(position)
+	part.Parent = workspace
+
+	local a0 = Instance.new("Attachment", part)
+	local a1 = Instance.new("Attachment", char.HumanoidRootPart)
+
+	local beam = Instance.new("Beam")
+	beam.Attachment0 = a0
+	beam.Attachment1 = a1
+	beam.Width0 = 0.12
+	beam.Width1 = 0.12
+	beam.FaceCamera = true
+	beam.Color = ColorSequence.new(color)
+	beam.Parent = workspace
+
+	if index == 1 then
+		if beam1 then beam1:Destroy() end
+		if part1 then part1:Destroy() end
+		beam1, part1 = beam, part
+	else
+		if beam2 then beam2:Destroy() end
+		if part2 then part2:Destroy() end
+		beam2, part2 = beam, part
+	end
+end
+
+btn1.MouseButton1Click:Connect(function()
+	pressAnim(btn1)
+	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	pos1 = hrp.CFrame
+	createBeam(pos1.Position, Color3.fromRGB(0,170,255), 1)
+	status.Text = "Position 1 Set ✓"
+end)
+
+task.spawn(function()
+	while gui.Parent do
+		task.wait(1)
+		local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		if not hrp then continue end
+
+		local closest, dist = nil, math.huge
+		for _, v in ipairs(targetPositions) do
+			local d = (hrp.Position - v).Magnitude
+			if d < dist then
+				dist = d
+				closest = v
+			end
+		end
+
+		if closest then
+			pos2 = CFrame.new(closest)
+			createBeam(pos2.Position, Color3.fromRGB(255,140,0), 2)
+		end
+	end
+end)
+
+ProximityPromptService.PromptButtonHoldEnded:Connect(function(prompt, who)
+	if who ~= player then return end
+	if prompt.Name ~= "Steal" and prompt.ActionText ~= "Steal" then return end
+
+	status.Text = "Stealing..."
+
+	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	if pos1 then hrp.CFrame = pos1 end
+	if pos2 then task.wait(0.05) hrp.CFrame = pos2 end
+
+	status.Text = "Steal Complete ✓"
+	task.wait(2)
+	status.Text = "Waiting for Steal…"
+end)
+
+-- ============================================================
+-- Remove Animation Button
+-- ============================================================
+
+local animDisableConn = nil
+local originalAnimIds = {}
+local animateScript = nil
+local ANIM_TYPES = {"walk", "run", "jump", "fall"}
+
+local function cacheOriginalAnimations()
+	local char = player.Character
+	if not char then return false end
+	
+	animateScript = char:FindFirstChild("Animate")
+	if not animateScript then return false end
+	
+	originalAnimIds = {}
+	for _, animType in ipairs(ANIM_TYPES) do
+		local animFolder = animateScript:FindFirstChild(animType)
+		if animFolder then
+			originalAnimIds[animType] = {}
+			for _, anim in ipairs(animFolder:GetChildren()) do
+				if anim:IsA("Animation") then
+					originalAnimIds[animType][anim.Name] = anim.AnimationId
+				end
+			end
+		end
+	end
+	return true
+end
+
+local function disableAnimations()
+	if not animateScript then return end
+	for _, animType in ipairs(ANIM_TYPES) do
+		local animFolder = animateScript:FindFirstChild(animType)
+		if animFolder then
+			for _, anim in ipairs(animFolder:GetChildren()) do
+				if anim:IsA("Animation") then
+					anim.AnimationId = ""
+				end
+			end
+		end
+	end
+	local char = player.Character
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+				track:Stop(0)
+			end
+		end
+	end
+end
+
+local function restoreAnimations()
+	if not animateScript or not originalAnimIds then return end
+	for animType, anims in pairs(originalAnimIds) do
+		local animFolder = animateScript:FindFirstChild(animType)
+		if animFolder then
+			for animName, animId in pairs(anims) do
+				local anim = animFolder:FindFirstChild(animName)
+				if anim and anim:IsA("Animation") then
+					anim.AnimationId = animId
+				end
+			end
+		end
+	end
+end
+
+local function startAnimDisable()
+	if animDisableConn then return end
+	if not next(originalAnimIds) then
+		if not cacheOriginalAnimations() then
+			warn("[Anim Disable] Failed to cache animations")
+			return
+		end
+	end
+	animDisableConn = RunService.Heartbeat:Connect(function()
+		disableAnimations()
+	end)
+end
+
+local function stopAnimDisable()
+	if animDisableConn then
+		animDisableConn:Disconnect()
+		animDisableConn = nil
+	end
+	restoreAnimations()
+end
+
+-- Button
+local removeAnimBtn = makeButton("Remove Animation", 120)
+removeAnimBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+local animActive = false
+
+removeAnimBtn.MouseButton1Click:Connect(function()
+	pressAnim(removeAnimBtn)
+	animActive = not animActive
+	if animActive then
+		removeAnimBtn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+		startAnimDisable()
+	else
+		removeAnimBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+		stopAnimDisable()
+	end
+end)
+
+-- Discord link
+local discord = Instance.new("TextLabel", frame)
+discord.Size = UDim2.new(1, 0, 0, 16)
+discord.Position = UDim2.fromOffset(0, 140)
+discord.BackgroundTransparency = 1
+discord.Text = "https://discord.gg/rE5FjgJVHr"
+discord.Font = Enum.Font.GothamMedium
+discord.TextSize = 10
+discord.TextXAlignment = Enum.TextXAlignment.Center
+discord.TextColor3 = Color3.fromRGB(0, 255, 0)
