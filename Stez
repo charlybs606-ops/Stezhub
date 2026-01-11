@@ -7,7 +7,8 @@ local player = Players.LocalPlayer
 
 -- Liste des comptes autorisés
 local whitelist = {
-    "charlyto68", 
+    "charlyto68",
+    "HugoSous16kJNR",
 }
 
 local function checkWhitelist()
