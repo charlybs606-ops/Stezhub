@@ -9,7 +9,7 @@ local player = Players.LocalPlayer
 local whitelist = {
     "charlyto68",
     "HugoSous16kJNR",
-    "liorrrrrrrrrr0",
+    "Liorrrrrrrrrr0",
 }
 
 local function checkWhitelist()
