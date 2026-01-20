@@ -37,7 +37,7 @@ if not checkWhitelist() then
     warn("[ACCÈS BLOQUÉ] Tentative par : @" .. player.Name)
     task.wait(4)
     sg:Destroy()
-    return -- Arrête l'exécution ici
+    return 
 end
 
 -- ============================================================
@@ -47,6 +47,7 @@ end
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local rs = game:GetService("ReplicatedStorage")
 
 if _G.stezHubInstantStealLoaded then 
 	warn("stez Instant Steal already loaded!")
@@ -171,13 +172,13 @@ local targetPositions = {
 	Vector3.new(-481.72, -3.79, 196.21), Vector3.new(-481.76, -3.79, 244.92)
 }
 
--- GUI Creation
+-- GUI Creation (Frame agrandie à 240)
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "STEZHubUI"
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromOffset(220, 185)
+frame.Size = UDim2.fromOffset(220, 240)
 frame.Position = UDim2.fromScale(0.5, 0.5)
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -220,6 +221,34 @@ local btn1 = makeButton("Set Position", 80)
 local btnDesync = makeButton("Desync: ON", 125)
 btnDesync.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 
+local btnAllow = makeButton("ALLOW/DISALLOW", 170)
+btnAllow.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
+btnAllow.TextSize = 13
+
+-- LOGIQUE ALLOW/DISALLOW
+local allowActive = false
+local allowDeb = false
+btnAllow.MouseButton1Click:Connect(function()
+    if allowDeb then return end
+    allowDeb = true
+    allowActive = not allowActive
+    
+    pcall(function()
+        rs.Packages.Net["RE/PlotService/ToggleFriends"]:FireServer()
+    end)
+    
+    local s = tick()
+    while tick() - s < 1 do
+        btnAllow.Text = string.format("%.2fs", 1 - (tick() - s))
+        btnAllow.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        task.wait()
+    end
+    
+    btnAllow.Text = "ALLOW/DISALLOW"
+    btnAllow.BackgroundColor3 = allowActive and Color3.fromRGB(0, 180, 80) or Color3.fromRGB(220, 40, 40)
+    allowDeb = false
+end)
+
 -- LOGIQUE DESYNC
 local function toggleDesync(active)
     if active then
@@ -232,7 +261,7 @@ local function toggleDesync(active)
     else
         applyFFlags(defaultFFlags)
         btnDesync.Text = "Desync: OFF"
-        btnDesync.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+        btnDesync.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
         if player.Character and player.Character:FindFirstChild("Animate") then
             player.Character.Animate.Disabled = false
         end
@@ -298,7 +327,7 @@ end)
 -- DISCORD
 local discord = Instance.new("TextLabel", frame)
 discord.Size = UDim2.new(1, 0, 0, 16)
-discord.Position = UDim2.fromOffset(0, 165)
+discord.Position = UDim2.fromOffset(0, 215)
 discord.BackgroundTransparency = 1
 discord.Text = "https://discord.gg/rE5FjgJVHr"
 discord.Font = Enum.Font.GothamMedium
