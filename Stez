@@ -10,6 +10,7 @@ local whitelist = {
     "charlyto68",
     "HugoSous16kJNR",
     "Liorrrrrrrrrr0",
+    "trade_sab48",
 }
 
 local function checkWhitelist()
