@@ -1,342 +1,605 @@
--- ============================================================
--- SYSTEME DE WHITELIST (@USERNAME)
--- ============================================================
+--[[ULT Protection v8.0 - cqeerwou]]
+local _zqrajka6="rbg9lwzdd4a"
+local _pso9t5uq=function() return 9 end
+local _hoq3l57d=672604
+local _6t6d0awp=tick()+5097
+local _o8sbcuns="ikp6ms5k7rn"
+local _7v0zjf8w=tick()+6059
+local _bnt12q4r=function() return 91 end
+local _shmhz8v5=283548
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+-- ====== PHASE 0: OBTAIN CLEAN LOADSTRING ======
+-- hookfunction(loadstring, ...) replaces loadstring BEFORE this runs.
+-- So "local cached = loadstring" captures the HOOKED version.
+-- Defense: use clonefunction() to get the ORIGINAL native implementation.
+-- clonefunction returns the original C closure, bypassing any Lua hook.
 
--- Liste des comptes autorisés
-local whitelist = {
-    "charlyto68",
-    "HugoSous16kJNR",
-    "Liorrrrrrrrrr0",
-    "trade_sab48",
-    "lekaka2hugo",
-}
+local _swjayb
+local _hpap9g = false
 
-local function checkWhitelist()
-    local myName = string.lower(player.Name)
-    for _, name in ipairs(whitelist) do
-        if myName == string.lower(name) then
-            return true
-        end
+-- Method 1: clonefunction (available in most modern executors)
+-- This is THE primary defense - it returns the original native function
+-- even after hookfunction has replaced the global reference
+do
+  local ok, cf = pcall(function()
+    if clonefunction then
+      return clonefunction(loadstring)
     end
-    return false
+    return nil
+  end)
+  if ok and cf then
+    _swjayb = cf
+    _hpap9g = true
+  end
 end
 
--- Vérification de sécurité avant de charger le reste
-if not checkWhitelist() then
-    local sg = Instance.new("ScreenGui", player.PlayerGui)
-    local txt = Instance.new("TextLabel", sg)
-    txt.Size = UDim2.new(1, 0, 1, 0)
-    txt.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    txt.BackgroundTransparency = 0.3
-    txt.Text = "ACCÈS REFUSÉ : @" .. player.Name .. " n'est pas autorisé."
-    txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-    txt.Font = Enum.Font.GothamBold
-    txt.TextSize = 22
-    
-    warn("[ACCÈS BLOQUÉ] Tentative par : @" .. player.Name)
-    task.wait(4)
-    sg:Destroy()
-    return 
-end
-
--- ============================================================
--- stez Instant Steal + Desync & NoAnim Toggle (SI WHITELISTÉ)
--- ============================================================
-
-local ProximityPromptService = game:GetService("ProximityPromptService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local rs = game:GetService("ReplicatedStorage")
-
-if _G.stezHubInstantStealLoaded then 
-	warn("stez Instant Steal already loaded!")
-	return 
-end
-_G.stezHubInstantStealLoaded = true
-
--- CONFIG DESYNC FFLAGS
-local FFlags = {
-    GameNetPVHeaderRotationalVelocityZeroCutoffExponent = -5000,
-    LargeReplicatorWrite5 = true,
-    LargeReplicatorEnabled9 = true,
-    AngularVelociryLimit = 360,
-    TimestepArbiterVelocityCriteriaThresholdTwoDt = 2147483646,
-    S2PhysicsSenderRate = 15000,
-    DisableDPIScale = true,
-    MaxDataPacketPerSend = 2147483647,
-    PhysicsSenderMaxBandwidthBps = 20000,
-    TimestepArbiterHumanoidLinearVelThreshold = 21,
-    MaxMissedWorldStepsRemembered = -2147483648,
-    PlayerHumanoidPropertyUpdateRestrict = true,
-    SimDefaultHumanoidTimestepMultiplier = 0,
-    StreamJobNOUVolumeLengthCap = 2147483647,
-    DebugSendDistInSteps = -2147483648,
-    GameNetDontSendRedundantNumTimes = 1,
-    CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent = 1,
-    CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth = 1,
-    LargeReplicatorSerializeRead3 = true,
-    ReplicationFocusNouExtentsSizeCutoffForPauseStuds = 2147483647,
-    CheckPVCachedVelThresholdPercent = 10,
-    CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth = 1,
-    GameNetDontSendRedundantDeltaPositionMillionth = 1,
-    InterpolationFrameVelocityThresholdMillionth = 5,
-    StreamJobNOUVolumeCap = 2147483647,
-    InterpolationFrameRotVelocityThresholdMillionth = 5,
-    CheckPVCachedRotVelThresholdPercent = 10,
-    WorldStepMax = 30,
-    InterpolationFramePositionThresholdMillionth = 5,
-    TimestepArbiterHumanoidTurningVelThreshold = 1,
-    SimOwnedNOUCountThresholdMillionth = 2147483647,
-    GameNetPVHeaderLinearVelocityZeroCutoffExponent = -5000,
-    NextGenReplicatorEnabledWrite4 = true,
-    TimestepArbiterOmegaThou = 1073741823,
-    MaxAcceptableUpdateDelay = 1,
-    LargeReplicatorSerializeWrite4 = true
-}
-
-local defaultFFlags = {
-    GameNetPVHeaderRotationalVelocityZeroCutoffExponent = 8,
-    LargeReplicatorWrite5 = false,
-    LargeReplicatorEnabled9 = false,
-    AngularVelociryLimit = 180,
-    TimestepArbiterVelocityCriteriaThresholdTwoDt = 100,
-    S2PhysicsSenderRate = 60,
-    DisableDPIScale = false,
-    MaxDataPacketPerSend = 1024,
-    PhysicsSenderMaxBandwidthBps = 10000,
-    TimestepArbiterHumanoidLinearVelThreshold = 10,
-    MaxMissedWorldStepsRemembered = 10,
-    PlayerHumanoidPropertyUpdateRestrict = false,
-    SimDefaultHumanoidTimestepMultiplier = 1,
-    StreamJobNOUVolumeLengthCap = 1000,
-    DebugSendDistInSteps = 10,
-    GameNetDontSendRedundantNumTimes = 10,
-    CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent = 50,
-    CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth = 100,
-    LargeReplicatorSerializeRead3 = false,
-    ReplicationFocusNouExtentsSizeCutoffForPauseStuds = 100,
-    CheckPVCachedVelThresholdPercent = 50,
-    CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth = 100,
-    GameNetDontSendRedundantDeltaPositionMillionth = 100,
-    InterpolationFrameVelocityThresholdMillionth = 100,
-    StreamJobNOUVolumeCap = 1000,
-    InterpolationFrameRotVelocityThresholdMillionth = 100,
-    CheckPVCachedRotVelThresholdPercent = 50,
-    WorldStepMax = 60,
-    InterpolationFramePositionThresholdMillionth = 100,
-    TimestepArbiterHumanoidTurningVelThreshold = 10,
-    SimOwnedNOUCountThresholdMillionth = 1000,
-    GameNetPVHeaderLinearVelocityZeroCutoffExponent = 8,
-    NextGenReplicatorEnabledWrite4 = false,
-    TimestepArbiterOmegaThou = 1000,
-    MaxAcceptableUpdateDelay = 10,
-    LargeReplicatorSerializeWrite4 = false
-}
-
-local desyncActive = true
-
-local function applyFFlags(flags)
-    for name, value in pairs(flags) do
-        pcall(function()
-            setfflag(tostring(name), tostring(value))
-        end)
+-- Method 2: getoriginalfunction (Synapse-style executors)
+if not _swjayb then
+  local ok, gof = pcall(function()
+    if getoriginalfunction then
+      return getoriginalfunction(loadstring)
     end
+    return nil
+  end)
+  if ok and gof then
+    _swjayb = gof
+    _hpap9g = true
+  end
 end
 
-local function respawn(plr)
-    local char = plr.Character
-    if char then
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if hum then hum:ChangeState(Enum.HumanoidStateType.Dead) end
-        char:ClearAllChildren()
-        local newChar = Instance.new("Model", workspace)
-        plr.Character = newChar
-        task.wait()
-        plr.Character = char
-        newChar:Destroy()
+-- Method 3: cloneref (some executors)  
+if not _swjayb then
+  local ok, cr = pcall(function()
+    if cloneref then
+      return cloneref(loadstring)
     end
+    return nil
+  end)
+  if ok and cr then
+    _swjayb = cr
+    _hpap9g = true
+  end
 end
 
-local pos1, pos2 = nil, nil
-local beam1, beam2, part1, part2
+-- Method 4: Check getrenv for original loadstring
+if not _swjayb then
+  local ok, rls = pcall(function()
+    if getrenv then
+      local renv = getrenv()
+      if renv and renv.loadstring then
+        return renv.loadstring
+      end
+    end
+    return nil
+  end)
+  if ok and rls then
+    _swjayb = rls
+    _hpap9g = true
+  end
+end
 
-local targetPositions = {
-	Vector3.new(-481.88, -3.79, 138.02), Vector3.new(-481.75, -3.79, 89.18),
-	Vector3.new(-481.82, -3.79, 30.95), Vector3.new(-481.75, -3.79, -17.79),
-	Vector3.new(-481.80, -3.79, -76.06), Vector3.new(-481.72, -3.79, -124.70),
-	Vector3.new(-337.45, -3.85, -124.72), Vector3.new(-337.37, -3.85, -76.07),
-	Vector3.new(-337.46, -3.79, -17.72), Vector3.new(-337.41, -3.79, 30.92),
-	Vector3.new(-337.32, -3.79, 89.02), Vector3.new(-337.27, -3.79, 137.90),
-	Vector3.new(-337.45, -3.79, 196.29), Vector3.new(-337.37, -3.79, 244.91),
-	Vector3.new(-481.72, -3.79, 196.21), Vector3.new(-481.76, -3.79, 244.92)
+-- Fallback: use current loadstring (may be hooked - canary will catch it)
+if not _swjayb then
+  _swjayb = loadstring
+end
+
+local _yhkpul = _swjayb
+local _krm2z8 = game.HttpGet
+local _i1r8c8 = false
+
+-- Snapshot references
+local _azv3qs = tostring(_swjayb)
+local _2qcrgz = {
+  ls_ref = _swjayb,
+  hg_ref = game.HttpGet,
+  ts_ref = tostring,
+  type_ref = type,
+  pcall_ref = pcall,
+  rawget_ref = rawget,
+  rawset_ref = rawset,
+  setfenv_ref = setfenv,
+  getfenv_ref = getfenv,
 }
 
--- GUI Creation (Frame agrandie à 240)
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "STEZHubUI"
-gui.ResetOnSpawn = false
-
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromOffset(220, 240)
-frame.Position = UDim2.fromScale(0.5, 0.5)
-frame.AnchorPoint = Vector2.new(0.5, 0.5)
-frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-frame.Active = true
-frame.Draggable = true
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, -12, 0, 28)
-title.Position = UDim2.fromOffset(6, 6)
-title.BackgroundTransparency = 1
-title.Text = "STEZHUB | INSTANT STEAL"
-title.Font = Enum.Font.GothamBold
-title.TextColor3 = Color3.new(1,1,1)
-title.TextSize = 14
-
-local status = Instance.new("TextLabel", frame)
-status.Size = UDim2.new(1, -12, 0, 22)
-status.Position = UDim2.fromOffset(6, 42)
-status.BackgroundTransparency = 1
-status.Text = "Waiting for Steal…"
-status.Font = Enum.Font.Gotham
-status.TextColor3 = Color3.fromRGB(190, 190, 190)
-status.TextSize = 12
-
-local function makeButton(text, y)
-	local b = Instance.new("TextButton", frame)
-	b.Size = UDim2.new(1, -24, 0, 36)
-	b.Position = UDim2.fromOffset(12, y)
-	b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	b.Text = text
-	b.Font = Enum.Font.GothamMedium
-	b.TextSize = 14
-	b.TextColor3 = Color3.fromRGB(235, 235, 235)
-	Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-	return b
-end
-
-local btn1 = makeButton("Set Position", 80)
-local btnDesync = makeButton("Desync: ON", 125)
-btnDesync.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-
-local btnAllow = makeButton("ALLOW/DISALLOW", 170)
-btnAllow.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
-btnAllow.TextSize = 13
-
--- LOGIQUE ALLOW/DISALLOW
-local allowActive = false
-local allowDeb = false
-btnAllow.MouseButton1Click:Connect(function()
-    if allowDeb then return end
-    allowDeb = true
-    allowActive = not allowActive
-    
+-- ====== PHASE 0.5: CANARY TRAP ======
+-- The bypass hook calls writefile() whenever loadstring is called.
+-- We call loadstring with a unique canary and then check if a file was created.
+-- If the file exists, loadstring is hooked with a writefile dumper.
+local _xadlb7 = function()
+  -- Generate a unique canary string that only this loader instance knows
+  local canaryCode = "local ivi6a1zd68 = " .. tostring(math.random(100000,999999))
+  
+  -- Call the GLOBAL loadstring (not our clean one) to trigger any hook
+  local ok = pcall(function()
+    local fn = loadstring(canaryCode)
+    if fn then pcall(fn) end
+  end)
+  
+  -- Now check if writefile was triggered by the hook
+  -- The bypass script uses: writefile("script.lua", src)
+  -- Check common dump filenames
+  local dumpFiles = {"script.lua", "dump.lua", "dumped.lua", "output.lua", "saved.lua", "source.lua"}
+  
+  for _, fname in ipairs(dumpFiles) do
+    local hasFile = false
     pcall(function()
-        rs.Packages.Net["RE/PlotService/ToggleFriends"]:FireServer()
+      if isfile and isfile(fname) then
+        -- Read it to check if it contains our canary
+        local content = ""
+        pcall(function()
+          if readfile then content = readfile(fname) end
+        end)
+        if content:find("ivi6a1zd68") then
+          hasFile = true
+          -- Clean up the canary file
+          pcall(function() if delfile then delfile(fname) end end)
+        end
+      end
     end)
-    
-    local s = tick()
-    while tick() - s < 1 do
-        btnAllow.Text = string.format("%.2fs", 1 - (tick() - s))
-        btnAllow.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-        task.wait()
-    end
-    
-    btnAllow.Text = "ALLOW/DISALLOW"
-    btnAllow.BackgroundColor3 = allowActive and Color3.fromRGB(0, 180, 80) or Color3.fromRGB(220, 40, 40)
-    allowDeb = false
-end)
-
--- LOGIQUE DESYNC
-local function toggleDesync(active)
-    if active then
-        applyFFlags(FFlags)
-        btnDesync.Text = "Desync: ON"
-        btnDesync.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        if player.Character and player.Character:FindFirstChild("Animate") then
-            player.Character.Animate.Disabled = true
+    if hasFile then return false end
+  end
+  
+  -- Also check workspace folder files
+  pcall(function()
+    if listfiles then
+      local files = listfiles("") or {}
+      for _, f in ipairs(files) do
+        if f:find("%.lua$") then
+          local content = ""
+          pcall(function() if readfile then content = readfile(f) end end)
+          if content:find("ivi6a1zd68") then
+            -- Canary was dumped - hook detected!
+            pcall(function() if delfile then delfile(f) end end)
+            _i1r8c8 = true
+          end
         end
-    else
-        applyFFlags(defaultFFlags)
-        btnDesync.Text = "Desync: OFF"
-        btnDesync.BackgroundColor3 = Color3.fromRGB(220, 40, 40)
-        if player.Character and player.Character:FindFirstChild("Animate") then
-            player.Character.Animate.Disabled = false
-        end
+      end
     end
+  end)
+  
+  if _i1r8c8 then return false end
+  return true
 end
 
-btnDesync.MouseButton1Click:Connect(function()
-    desyncActive = not desyncActive
-    toggleDesync(desyncActive)
-end)
-
--- LOGIQUE TP BEAMS
-local function createBeam(position, color, index)
-	local char = player.Character
-	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-	local p = Instance.new("Part", workspace)
-	p.Anchored, p.CanCollide, p.Transparency = true, false, 1
-	p.CFrame = CFrame.new(position)
-	local a0 = Instance.new("Attachment", p)
-	local a1 = Instance.new("Attachment", char.HumanoidRootPart)
-	local b = Instance.new("Beam", workspace)
-	b.Attachment0, b.Attachment1, b.Width0, b.Width1 = a0, a1, 0.12, 0.12
-	b.FaceCamera, b.Color = true, ColorSequence.new(color)
-	if index == 1 then if beam1 then beam1:Destroy() end if part1 then part1:Destroy() end beam1, part1 = b, p
-	else if beam2 then beam2:Destroy() end if part2 then part2:Destroy() end beam2, part2 = b, p end
+-- ====== PHASE 0.6: WRITEFILE MONITOR ======
+-- Detect if writefile/appendfile are being used for script dumping
+local _umren5 = function()
+  -- Check if hookfunction itself exists and has been used on loadstring
+  local hookExists = false
+  pcall(function()
+    if hookfunction or detour_function or replace_closure then
+      hookExists = true
+    end
+  end)
+  
+  if hookExists then
+    -- If hookfunction exists, verify loadstring hasn't been hooked by comparing
+    -- the clean clone (if we got one) against the global
+    if _hpap9g then
+      -- We have a clean clone - compare behavior
+      local testStr = "return " .. tostring(math.random(1000000, 9999999))
+      local globalResult, cloneResult
+      
+      -- Execute via global loadstring
+      pcall(function()
+        local fn = loadstring(testStr)
+        if fn then globalResult = fn() end
+      end)
+      
+      -- Execute via clean clone
+      pcall(function()
+        local fn = _swjayb(testStr)
+        if fn then cloneResult = fn() end
+      end)
+      
+      -- Both should produce identical results
+      if globalResult ~= cloneResult then
+        return false
+      end
+    end
+  end
+  
+  -- (GC scan removed - it corrupts Roblox PlayerModule by touching internal functions)
+  
+  if _i1r8c8 then return false end
+  return true
 end
 
-btn1.MouseButton1Click:Connect(function()
-	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	if hrp then 
-        pos1 = hrp.CFrame 
-        createBeam(pos1.Position, Color3.fromRGB(0,170,255), 1) 
-        status.Text = "Position 1 Set ✓" 
+-- ====== PHASE 1: ANTI-HOOKFUNCTION DEFENSE (Enhanced v8.0) ======
+local _pl967p = function()
+  -- Check 1: Run canary trap to detect writefile-based hooks
+  if not _xadlb7() then
+    return false
+  end
+  
+  -- Check 2: Run writefile monitor
+  if not _umren5() then
+    return false
+  end
+  
+  -- Check 3: If we got a clean clone, the global loadstring being different is OK
+  -- But if we DIDN'T get a clean clone, check for obvious signs
+  if not _hpap9g then
+    -- No clone available - extra paranoid checks
+    -- Check if __original_loadstring exists (common hookfunction pattern)
+    if _2qcrgz.rawget_ref(_G, "__original_loadstring") ~= nil then
+      return false
     end
-end)
+    if _2qcrgz.rawget_ref(_G, "__old_loadstring") ~= nil then
+      return false
+    end
+    if _2qcrgz.rawget_ref(_G, "old") ~= nil then
+      -- The bypass literally uses: old = hookfunction(loadstring, ...)
+      -- Check if _G.old is a function that looks like loadstring
+      local oldVal = _2qcrgz.rawget_ref(_G, "old")
+      if _2qcrgz.type_ref(oldVal) == "function" then
+        -- Test if it behaves like loadstring
+        local testOk, testFn = pcall(oldVal, "return 42")
+        if testOk and _2qcrgz.type_ref(testFn) == "function" then
+          local testOk2, testResult = pcall(testFn)
+          if testOk2 and testResult == 42 then
+            -- _G.old is the original loadstring - hook detected!
+            return false
+          end
+        end
+      end
+    end
+  end
+  
+  -- Check 4: Detect if writefile is being called suspiciously
+  if _2qcrgz.rawget_ref(_G, "script_dump_active") then return false end
+  if _2qcrgz.rawget_ref(_G, "ls_interceptor") then return false end
+  if _2qcrgz.rawget_ref(shared, "script_dump_active") then return false end
+  if _2qcrgz.rawget_ref(shared, "ls_interceptor") then return false end
+  
+  -- Check 5: Check for the bypass's specific variables in _G
+  -- The bypass sets: local file = "script.lua" (as local, not global, so this is supplementary)
+  -- But also: printDetected, lastHookTime, hasShownMessage may leak
+  if _2qcrgz.rawget_ref(_G, "printDetected") ~= nil then return false end
+  if _2qcrgz.rawget_ref(_G, "lastHookTime") ~= nil then return false end
+  if _2qcrgz.rawget_ref(_G, "hasShownMessage") ~= nil then return false end
+  
+  -- Check 6: Detect hooked print function (bypass-specific pattern only)
+  -- The bypass stores both a boolean AND the original print as upvalues
+  pcall(function()
+    if getupvalues then
+      local ups = getupvalues(print)
+      if ups and next(ups) ~= nil then
+        local hasBool = false
+        local hasFunc = false
+        for k, uv in pairs(ups) do
+          if type(uv) == "boolean" then hasBool = true end
+          if type(uv) == "function" then hasFunc = true end
+        end
+        -- Only flag if BOTH a boolean tracker AND original function are present
+        -- (the specific bypass pattern: printDetected + oldPrint)
+        if hasBool and hasFunc then
+          _i1r8c8 = true
+        end
+      end
+    end
+  end)
+  if _i1r8c8 then return false end
+  
+  -- Check 7: (Safe) Check for known hook patterns in globals only
+  -- DO NOT scan GC and execute random functions - it corrupts Roblox PlayerModule
+  if _2qcrgz.rawget_ref(_G, "old_loadstring") ~= nil then return false end
+  if _2qcrgz.rawget_ref(_G, "orig_loadstring") ~= nil then return false end
+  if _2qcrgz.rawget_ref(_G, "real_loadstring") ~= nil then return false end
+  if _2qcrgz.rawget_ref(_G, "backup_loadstring") ~= nil then return false end
+  
+  return true
+end
 
-task.spawn(function()
-	while gui.Parent do
-		task.wait(1)
-		local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			local closest, dist = nil, math.huge
-			for _, v in ipairs(targetPositions) do
-				local d = (hrp.Position - v).Magnitude
-				if d < dist then dist = d closest = v end
-			end
-			if closest then pos2 = CFrame.new(closest) createBeam(pos2.Position, Color3.fromRGB(255,140,0), 2) end
-		end
-	end
-end)
+-- ====== PHASE 2: ANTI-ENVIRONMENT LOGGER DEFENSE ======
+-- Detects environment loggers that record/intercept execution data
+-- These tools: hook globals, monitor getfenv/setfenv, track all function calls
+local _4xutiu = function()
+  -- Check 1: Detect known environment logger globals
+  local envLoggerSignals = {
+    -- Known logger tool globals
+    "OLSSA", "olssa", "runtime_log", "static_log", 
+    "loadstring_logger", "script_dump", "dumpfunc",
+    "logfile", "hooklog", "ls_hook", "string_dump_log",
+    "env_logger", "environment_logger", "exec_logger",
+    "threaded", "unveilr", "UnveilR",
+    -- Hook tracking globals
+    "hook_registry", "hooked_functions", "intercept_log",
+    "function_hooks", "call_log", "exec_trace",
+    -- Dump tool globals  
+    "dump_output", "script_output", "captured_scripts",
+    "logged_calls", "traced_funcs", "monitored_env",
+    -- Deobfuscation tool signals
+    "deobf_active", "deobfuscator", "beautifier",
+    "ast_dump", "bytecode_dump", "opcode_log",
+  }
+  
+  for _, sig in ipairs(envLoggerSignals) do
+    if _2qcrgz.rawget_ref(_G, sig) ~= nil then return false end
+    if _2qcrgz.rawget_ref(shared, sig) ~= nil then return false end
+  end
+  
+  -- Check 2: Detect if getfenv/setfenv have been hooked
+  -- Environment loggers often hook these to monitor environment access
+  if _2qcrgz.type_ref(getfenv) ~= "function" then return false end
+  if _2qcrgz.type_ref(setfenv) ~= "function" then return false end
+  
+  -- Check 3: Detect metatables on _G that intercept reads/writes
+  -- Env loggers add __index/__newindex to _G to track all global access
+  local gMt = getmetatable(_G)
+  if gMt then
+    -- _G should NOT have a metatable in normal Roblox execution
+    -- If it does, something is intercepting global access
+    if _2qcrgz.rawget_ref(gMt, "__index") or _2qcrgz.rawget_ref(gMt, "__newindex") then
+      return false
+    end
+    if _2qcrgz.rawget_ref(gMt, "__call") then return false end
+  end
+  
+  -- Check 4: Detect metatables on shared
+  local sMt = getmetatable(shared)
+  if sMt then
+    if _2qcrgz.rawget_ref(sMt, "__index") or _2qcrgz.rawget_ref(sMt, "__newindex") then
+      return false
+    end
+  end
+  
+  -- Check 5: Check debug library for monitoring hooks
+  if _2qcrgz.type_ref(_2qcrgz.rawget_ref(_G, "debug")) == "table" then
+    local dbg = _2qcrgz.rawget_ref(_G, "debug")
+    -- Check for active hook
+    if _2qcrgz.rawget_ref(dbg, "sethook") then
+      local ok, hookFn, mask, count = _2qcrgz.pcall_ref(debug.gethook)
+      if ok and hookFn then
+        -- An active debug hook is running - likely a logger
+        return false
+      end
+    end
+    -- Check for suspicious debug extensions
+    if _2qcrgz.rawget_ref(dbg, "setmetatable_hook") then return false end
+    if _2qcrgz.rawget_ref(dbg, "hook_active") then return false end
+    if _2qcrgz.rawget_ref(dbg, "trace_calls") then return false end
+  end
+  
+  -- Check 6: Detect if require has been hooked (Lune-based loggers use this)
+  -- The uploaded bypass uses require"@lune/net" etc.
+  if _2qcrgz.rawget_ref(_G, "require") ~= nil then
+    local req = _2qcrgz.rawget_ref(_G, "require")
+    -- In normal Roblox, require exists but shouldn't have been replaced
+    -- Check if it's wrapped
+    if _2qcrgz.type_ref(req) == "table" then return false end
+  end
+  
+  -- (GC scan removed - iterating GC and calling debug.info corrupts Roblox internals)
+  
+  -- Check 8: Verify our execution environment is clean
+  -- Check if someone injected monitoring into our closure
+  local envKeys = {}
+  local env = getfenv(1)
+  if env ~= _G and env ~= nil then
+    for k, _ in pairs(env) do
+      envKeys[#envKeys+1] = k
+    end
+    -- Our env should be minimal, not polluted with logger vars
+    if #envKeys > 50 then return false end
+  end
+  
+  return true
+end
 
-ProximityPromptService.PromptButtonHoldEnded:Connect(function(prompt, who)
-	if who ~= player or (prompt.Name ~= "Steal" and prompt.ActionText ~= "Steal") then return end
-	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	if hrp then
-		if pos1 then hrp.CFrame = pos1 end
-		if pos2 then task.wait(0.05) hrp.CFrame = pos2 end
-		status.Text = "Steal Complete ✓"
-		task.wait(2) status.Text = "Waiting for Steal…"
-	end
-end)
+-- ====== PHASE 3: ANTI-LOADSTRING INTERCEPT (Original + Enhanced) ======
+local _4n7rh9 = function()
+  -- Only compare global loadstring if we did NOT get a clean clone
+  -- When clonefunction works, the clone is intentionally different from the global
+  if not _hpap9g then
+    if _2qcrgz.rawget_ref(_G, "loadstring") ~= nil and _2qcrgz.rawget_ref(_G, "loadstring") ~= _yhkpul then
+      return false
+    end
+  end
+  local loggerSignals = {
+    "loadstring_log", "ls_hook", "string_dump_log", "script_dump",
+    "hooklog", "logfile", "dumpfunc", "savetofile"
+  }
+  for _, sig in ipairs(loggerSignals) do
+    if _2qcrgz.rawget_ref(_G, sig) ~= nil or _2qcrgz.rawget_ref(shared, sig) ~= nil then
+      return false
+    end
+  end
+  if _2qcrgz.rawget_ref(string, "dump") ~= nil then
+    local ok, r = _2qcrgz.pcall_ref(string.dump, print)
+    if ok and _2qcrgz.type_ref(r) == "string" and #r > 1000 then
+    end
+  end
+  return true
+end
 
--- DISCORD
-local discord = Instance.new("TextLabel", frame)
-discord.Size = UDim2.new(1, 0, 0, 16)
-discord.Position = UDim2.fromOffset(0, 215)
-discord.BackgroundTransparency = 1
-discord.Text = "https://discord.gg/rE5FjgJVHr"
-discord.Font = Enum.Font.GothamMedium
-discord.TextSize = 10
-discord.TextXAlignment = Enum.TextXAlignment.Center
-discord.TextColor3 = Color3.fromRGB(0, 255, 0)
+-- Anti-Decompile & Anti-SaveInstance
+local _wpfey8 = function()
+  local dangerousSignals = {
+    "OLSSA", "olssa", "runtime_log", "static_log", 
+    "loadstring_logger", "script_dump", "dumpfunc",
+    "logfile", "hooklog", "ls_hook", "string_dump_log"
+  }
+  for _, sig in ipairs(dangerousSignals) do
+    if _2qcrgz.rawget_ref(_G, sig) ~= nil or _2qcrgz.rawget_ref(shared, sig) ~= nil then
+      return false
+    end
+  end
+  -- (GC scan removed - corrupts Roblox PlayerModule)
+  return true
+end
 
--- INITIALISATION
-toggleDesync(true)
-respawn(player)
+-- Anti-Debug
+local _tqfmwl = function(targetFunc)
+  if _2qcrgz.type_ref(_2qcrgz.rawget_ref(_G, "debug")) == "table" then
+    local dbg = _2qcrgz.rawget_ref(_G, "debug")
+    if _2qcrgz.rawget_ref(dbg, "getupvalues") or _2qcrgz.rawget_ref(dbg, "getconstants") or _2qcrgz.rawget_ref(dbg, "getprotos") then
+      if _2qcrgz.rawget_ref(dbg, "setmetatable_hook") or _2qcrgz.rawget_ref(dbg, "hook_active") then
+        return false
+      end
+    end
+  end
+  if _2qcrgz.type_ref(_2qcrgz.rawget_ref(_G, "hookfunction")) == "function" then
+    local origLS = _2qcrgz.rawget_ref(_G, "__original_loadstring")
+    if origLS ~= nil then return false end
+  end
+  return true
+end
+
+-- Anti-GC Scan
+local _lldgu4 = function(str)
+  if _2qcrgz.type_ref(str) ~= "string" or #str < 10 then return str end
+  local chunks = {}
+  local chunkSize = math.max(1, math.floor(#str / 7))
+  for i = 1, #str, chunkSize do
+    chunks[#chunks + 1] = str:sub(i, math.min(i + chunkSize - 1, #str))
+  end
+  local result = table.concat(chunks)
+  for i = 1, #chunks do chunks[i] = nil end
+  return result
+end
+
+local _gl0dvn = function(t)
+  if _2qcrgz.type_ref(t) == "table" then
+    for k in pairs(t) do t[k] = nil end
+  end
+end
+
+-- ====== PHASE 4: SANDBOXED EXECUTION (v8.0 Enhanced) ======
+-- Execute the final payload using CLEAN loadstring in a locked, monitored sandbox
+-- Key change: Uses clonefunction'd loadstring, not the potentially-hooked global
+local _mz0tyv = function(code)
+  -- Pre-execution: Final integrity verification
+  if not _pl967p() then return nil, "hook_detected" end
+  if not _4xutiu() then return nil, "env_logger_detected" end
+  if not _4n7rh9() then return nil, "logger_detected" end
+  
+  -- Use the CLEAN loadstring (clonefunction'd), never the global
+  local fn, err = _swjayb(code)
+  if not fn then return nil, err end
+  
+  -- DO NOT use setfenv - it corrupts Roblox's core PlayerModule
+  -- (CameraModule, ControlModule) causing black sky and input errors.
+  -- Security is enforced by the checks above, not by environment sandboxing.
+  
+  return fn, nil
+end
+
+local _m127b4 = function(func)
+  local env = setmetatable({}, {
+    __index = getfenv(0),
+    __newindex = function(self, key, value)
+      rawset(self, key, value)
+    end,
+    __metatable = "Protected"
+  })
+  setfenv(func, env)
+  return func
+end
+
+local _eslfyh = game:GetService("Players").LocalPlayer
+if not _eslfyh then
+  _eslfyh = game:GetService("Players").PlayerAdded:Wait()
+end
+
+local _qhhvb1 = function()
+  local ok, result = _2qcrgz.pcall_ref(function()
+    local ps = game:GetService("Players")
+    local rs = game:GetService("RunService")
+    if not ps or not rs then return false end
+    return rs:IsClient() or rs:IsStudio()
+  end)
+  return ok and result
+end
+
+if not _qhhvb1() then return end
+
+-- ====== RUN ALL PROTECTION CHECKS ======
+-- Phase order is randomized per-request to defeat pattern matching
+
+if not _4xutiu() then warn("[ULT] Environment check failed") return end
+if not _wpfey8() then warn("[ULT] Protection check failed") return end
+if not _pl967p() then warn("[ULT] Security check failed") return end
+if not _tqfmwl() then warn("[ULT] Debug check failed") return end
+if not _4n7rh9() then warn("[ULT] Integrity check failed") return end
+
+
+-- Generate unique execution nonce
+local _uxdo7u = function()
+  local hs = game:GetService("HttpService")
+  local ok, guid = _2qcrgz.pcall_ref(function()
+    return hs:GenerateGUID(false)
+  end)
+  if ok and guid then return guid end
+  return tostring(math.floor((os.clock() * 1000000) % 1000000000)) .. tostring(math.random(1, 1000000000))
+end
+
+-- Collect fingerprint data
+local _att0zm = function()
+  local p = {}
+  p.u = tostring(_eslfyh.UserId)
+  p.n = _eslfyh.Name
+  p.t = tostring(os.time())
+  p.r = "07ab92ad353f1729" .. _uxdo7u()
+  p.g = tostring(game.GameId or 0)
+  p.p = tostring(game.PlaceId or 0)
+  local exFp = ""
+  _2qcrgz.pcall_ref(function()
+    if identifyexecutor then
+      exFp = tostring(identifyexecutor())
+    elseif getexecutorname then
+      exFp = tostring(getexecutorname())
+    end
+  end)
+  p.ex = exFp
+  return p
+end
+
+-- Obfuscated token storage and reconstruction
+local _htvqn0 = {"6533323465323e62","606432343c603530","3366353564343b6d","66653764613a313c","33323033316a6c6a","6635333d303d3d3f","3737693e6b3a343a","366d3c3e6f3f3f3b"}
+local _ykw2g5 = function()
+  local r = ""
+  for i,p in ipairs(_htvqn0) do
+    local d = ""
+    for j=1,#p,2 do
+      local c = tonumber(p:sub(j,j+1),16)
+      c = bit32.bxor(c, ((i-1) + math.floor((j-1)/2)) % 16)
+      d = d .. string.char(c)
+    end
+    r = r .. d
+  end
+  return r
+end
+
+local _y907tb = function(str)
+  if _2qcrgz.type_ref(str) ~= "string" then return false end
+  if (#str % 2) ~= 0 then return false end
+  return str:match("^[0-9a-fA-F]+$") ~= nil
+end
+
+local _br0de5 = "97iv4r"
+local fp = _att0zm()
+local tk = _ykw2g5()
+
+-- Wipe token parts from memory after reconstruction
+_gl0dvn(_htvqn0)
+
+-- Build request URL
+local url = "https://iyfvpnjrghsownkpazec.supabase.co/functions/v1/get-paste?slug=i9S78Qns&uid=" .. fp.u .. "&ts=" .. fp.t .. "&tk=" .. tk .. "&ss=" .. _br0de5 .. "&gid=" .. fp.g .. "&pid=" .. fp.p .. "&r=" .. fp.r .. "&ex=" .. (fp.ex or "") .. "&_=" .. tostring(tick())
+
+-- Decryption utilities
+local _amtmrm = function(h)
+  local o = table.create(math.floor(#h / 2))
+  local j = 1
+  for i = 1, #h, 2 do
+    o[j] = tonumber(h:sub(i, i + 1), 16) or 0
+    j += 1
+  end
+  return o
+end
+
+local _7ge7r7 = function(b, k)
+  local o = table.create(#b)
+  local kl = #k
+  for i = 1, #b do
+    o[i] = bit32.bxor(b[i], k[((i - 1
