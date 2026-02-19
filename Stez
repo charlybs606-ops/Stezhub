@@ -1,1 +1,118 @@
-down
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Configuration
+local _G = getgenv and getgenv() or _G
+_G.StezHubEnabled = false
+local TargetSpeed = 29
+local DefaultSpeed = 16
+
+-- 1. Interface
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "StezHubBooster"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 180, 0, 100) -- Plus compact
+mainFrame.Position = UDim2.new(0.5, -90, 0.5, -50)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+-- Petit contour lumineux (Glow)
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(0, 255, 100)
+stroke.Transparency = 1 -- Invisible au départ
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 35)
+title.Position = UDim2.new(0, 0, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "STEZHUB BOOSTER"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.Parent = mainFrame
+
+local actionBtn = Instance.new("TextButton")
+actionBtn.Size = UDim2.new(0, 140, 0, 35)
+actionBtn.Position = UDim2.new(0.5, -70, 0.5, 5) -- Espace réduit entre titre et bouton
+actionBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+actionBtn.Text = "ACTIVATE" -- Texte changé
+actionBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+actionBtn.Font = Enum.Font.GothamBold
+actionBtn.TextSize = 14
+actionBtn.Parent = mainFrame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 8)
+btnCorner.Parent = actionBtn
+
+-- 2. Système de Drag (Déplacement)
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        update(input)
+    end
+end)
+
+-- 3. Logique de Vitesse
+RunService.Heartbeat:Connect(function()
+    if _G.StezHubEnabled then
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            if humanoid and rootPart and humanoid.MoveDirection.Magnitude > 0 then
+                rootPart.Velocity = Vector3.new(
+                    humanoid.MoveDirection.X * TargetSpeed,
+                    rootPart.Velocity.Y,
+                    humanoid.MoveDirection.Z * TargetSpeed
+                )
+            end
+        end
+    end
+end)
+
+-- 4. Interaction Bouton & Glow
+actionBtn.MouseButton1Click:Connect(function()
+    _G.StezHubEnabled = not _G.StezHubEnabled
+    local character = LocalPlayer.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    
+    if _G.StezHubEnabled then
+        actionBtn.Text = "ACTIVATED"
+        actionBtn.BackgroundColor3 = Color3.fromRGB(150, 255, 150)
+        stroke.Transparency = 0 -- Affiche le contour vert lumineux
+        if humanoid then humanoid.WalkSpeed = TargetSpeed end
+    else
+        actionBtn.Text = "ACTIVATE"
+        actionBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        stroke.Transparency = 1 -- Cache le contour
+        if humanoid then humanoid.WalkSpeed = DefaultSpeed end
+    end
+end)
